@@ -13,22 +13,21 @@ const fastify = Fastify({
   logger: true // Enable logging
 });
 
-fastify.register(fastifyFormBody);
-fastify.register(fastifyWs);
-
-const PORT = process.env.PORT || 8000;
-
-// Root route for health check
-fastify.get("/", async (_, reply) => {
-  reply.send({ message: "Server is running" });
-});
+const PORT = parseInt(process.env.PORT) || 8000;
 
 // Start the Fastify server
 const start = async () => {
   try {
-    // Register route handlers
+    // Register route handlers BEFORE defining routes
+    await fastify.register(fastifyFormBody);
+    await fastify.register(fastifyWs);
     await registerInboundRoutes(fastify);
     await registerOutboundRoutes(fastify);
+
+    // Root route for health check
+    fastify.get("/", async (_, reply) => {
+      reply.send({ message: "Server is running" });
+    });
 
     // Start listening
     await fastify.listen({ port: PORT, host: '0.0.0.0' });
